@@ -410,7 +410,7 @@
         state: absent
       when: not containerized_deployment | bool
 
-- name: set osd flags
+- name: set osd flag nodeep-scrub
   hosts: "{{ mon_group_name|default('mons') }}[0]"
   become: true
   gather_facts: false
@@ -418,12 +418,9 @@
     - import_role:
         name: ceph-defaults
 
-    - name: set osd flags
-      command: "{{ cephadm_cmd }} shell --fsid {{ fsid }} -- ceph --cluster {{ cluster }} osd set {{ item }}"
+    - name: set osd flag nodeep-scrub
+      command: "{{ cephadm_cmd }} shell --fsid {{ fsid }} -- ceph --cluster {{ cluster }} osd set nodeep-scrub"
       changed_when: false
-      with_items:
-        - noout
-        - nodeep-scrub
       environment:
         CEPHADM_IMAGE: '{{ ceph_docker_registry }}/{{ ceph_docker_image }}:{{ ceph_docker_image_tag }}'
 
@@ -440,6 +437,12 @@
         name: ceph-facts
         tasks_from: container_binary.yml
       when: containerized_deployment | bool
+
+    - name: set osd flag noout
+      command: "{{ cephadm_cmd }} shell --fsid {{ fsid }} -- ceph --cluster {{ cluster }} osd set-group noout {{ inventory_hostname }}"
+      changed_when: false
+      environment:
+        CEPHADM_IMAGE: '{{ ceph_docker_registry }}/{{ ceph_docker_image }}:{{ ceph_docker_image_tag }}'
 
     - name: get osd list
       ceph_volume:
@@ -509,7 +512,13 @@
       environment:
         CEPHADM_IMAGE: '{{ ceph_docker_registry }}/{{ ceph_docker_image }}:{{ ceph_docker_image_tag }}'
 
-- name: unset osd flags
+    - name: unset osd flag noout
+      command: "{{ cephadm_cmd }} shell --fsid {{ fsid }} -- ceph --cluster {{ cluster }} osd unset-group noout {{ inventory_hostname }}"
+      changed_when: false
+      environment:
+        CEPHADM_IMAGE: '{{ ceph_docker_registry }}/{{ ceph_docker_image }}:{{ ceph_docker_image_tag }}'
+
+- name: unset osd flag nodeep-scrub
   hosts: "{{ mon_group_name|default('mons') }}[0]"
   become: true
   gather_facts: false
@@ -517,12 +526,9 @@
     - import_role:
         name: ceph-defaults
 
-    - name: unset osd flags
-      command: "{{ cephadm_cmd }} shell --fsid {{ fsid }} -- ceph --cluster {{ cluster }} osd unset {{ item }}"
+    - name: unset osd flag nodeep-scrub
+      command: "{{ cephadm_cmd }} shell --fsid {{ fsid }} -- ceph --cluster {{ cluster }} osd unset nodeep-scrub"
       changed_when: false
-      with_items:
-        - noout
-        - nodeep-scrub
       environment:
         CEPHADM_IMAGE: '{{ ceph_docker_registry }}/{{ ceph_docker_image }}:{{ ceph_docker_image_tag }}'
 
